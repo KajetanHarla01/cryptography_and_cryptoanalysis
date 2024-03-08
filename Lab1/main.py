@@ -40,7 +40,7 @@ for i in range(2,9):
         func = []
         for j in range(0, 256):
             temp_bit = x[comb[0]][j]
-            for k in range(1, len(comb) - 1):
+            for k in range(1, len(comb)):
                 temp_bit ^= x[comb[k]][j]
             func.append(temp_bit)
         x.append(func)
@@ -63,3 +63,20 @@ for i in range(0,8):
 print("\nMinD of f functions: ")
 for i in range(0, len(distance)):
     print("minD(f" + str(i) + ", LF) = " + str(min(distance[i])))
+print("\nChecking SAC of the functions:")
+num = 0
+all_sac = 0
+for func in f:
+    sac = 0
+    for i in range(0, 8):
+        ones = 0
+        for j in range(0, 256):
+            alpha = pow(2, i)
+            index = j ^ alpha
+            ones += func[index] ^ func[j]
+        sac += ones/256
+    print("SAC f" + str(num) + " = " + str(sac/8))   
+    all_sac += sac/8   
+    num += 1
+print("SAC = " + str(all_sac/8))
+
