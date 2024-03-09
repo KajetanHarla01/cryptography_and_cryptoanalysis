@@ -81,11 +81,12 @@ for func in f:
 print("SAC = " + str(all_sac/8))
 nums = list(range(256))
 inputComb = list(itertools.combinations(nums, 2))
-xor_profile = [0]*(256*256)
+xor_profile = []
+for i in range(0, 256):
+    xor_profile.append([0]*256)
+show = True
 for comb in inputComb:
     input = comb[0] ^ comb[1]
     output = data[comb[0]] ^ data[comb[1]]
-    xor_profile[256*input + output] += 2
-    if xor_profile[256*input + output] == 6:
-        print(str(input) + " " + str(output))
-print("\nMax XOR profile = " + str(max(xor_profile)))
+    xor_profile[input][output] += 2
+print("\nMax XOR profile = " + str(max(map(max, xor_profile))))
