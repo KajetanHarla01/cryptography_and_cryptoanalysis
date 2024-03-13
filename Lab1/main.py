@@ -105,4 +105,3 @@ while True:
     else:
         break
 print("Cycles count = " + str(cycles))    
-        
