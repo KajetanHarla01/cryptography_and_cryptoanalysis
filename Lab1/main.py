@@ -1,4 +1,5 @@
 import itertools
+import random
 file_name = "sbox_08x08.SBX"
 data = []
 with open(file_name, 'rb') as f:
@@ -90,3 +91,18 @@ for comb in inputComb:
     output = data[comb[0]] ^ data[comb[1]]
     xor_profile[input][output] += 2
 print("\nMax XOR profile = " + str(max(map(max, xor_profile))))
+print("\nChecking cycles:")
+value = random.randint(0, 255)
+used_values = []
+cycles = 0
+while True:
+    cycles += 1
+    while data[value] not in used_values:
+        value = data[value]
+        used_values.append(value)
+    if len(used_values) < 256:
+        value = random.choice(list(set(range(256)) - set(used_values)))
+    else:
+        break
+print("Cycles count = " + str(cycles))    
+        
