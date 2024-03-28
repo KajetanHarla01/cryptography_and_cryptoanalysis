@@ -85,7 +85,6 @@ inputComb = list(itertools.combinations(nums, 2))
 xor_profile = []
 for i in range(0, 256):
     xor_profile.append([0]*256)
-show = True
 for comb in inputComb:
     input = comb[0] ^ comb[1]
     output = data[comb[0]] ^ data[comb[1]]

@@ -1,8 +1,6 @@
 import random
 import sympy
-
-def format_result(res):
-    return "{:.2f}".format(res)
+import math
 
 print("----------------------------------")
 print("Parameters setting")
@@ -39,7 +37,6 @@ for i, an in enumerate(a[::-1]):
     else:
         out += str(an)
 print(out)
-
 print("----------------------------------")
 print("Calculating shares")
 for i in range(n):
@@ -64,7 +61,8 @@ print("----------------------------------")
 print("Secret recovery")
 print("Select secrets: ")
 decrypt_secrets = []
-l = []
+l_denom = []
+l_num = []
 for i in range(t):
     sec = int(input())
     decrypt_secrets.append(sec)
@@ -77,21 +75,36 @@ for coordinate in decrypt_secrets:
         if share["x"] in decrypt_secrets and share["x"] != coordinate:
             num *= -share["x"]
             denom *= (xn - share["x"])
-    l.append(num / denom)
+    l_denom.append(denom)
+    l_num.append(num)
 
 print("Free terms of calculated polynomials ln: ")
-for n, ln in enumerate(l):
-    print(f"l{n} = {format_result(ln)}")
+for i in range(len(l_denom)):
+    d = int(l_denom[i] / math.gcd(l_denom[i], l_num[i]))
+    n = int(l_num[i] / math.gcd(l_denom[i], l_num[i]))
+    if d == 1 or n < 0:
+        print(f"l{i} = {n}")
+    elif d == -1:
+        print(f"l{i} = -{n}")
+    else:
+        print(f"l{i} = {n}/{d}")
 
 print("Calculating the secret: ")
 out = "s = ("
 sum = 0
-for n, ln in enumerate(l):
-    result = sympy.Mod(ln*shares[decrypt_secrets[n] - 1]['y'], p)
-    print(f"({shares[decrypt_secrets[n] - 1]['y']} * {format_result(ln)}) mod {p} = {format_result(result)}")
+for i in range(len(l_denom)):
+    result = (shares[decrypt_secrets[i] - 1]['y'] * l_num[i] * pow(l_denom[i], -1, p)) % p
+    d = int(l_denom[i] / math.gcd(l_denom[i], l_num[i]))
+    n = int(l_num[i] / math.gcd(l_denom[i], l_num[i]))
+    if d == 1 or n < 0:
+        print(f"({int(shares[decrypt_secrets[i] - 1]['y'])} * {n}) mod {p} = {result}")
+    elif d == -1:
+        print(f"({int(shares[decrypt_secrets[i] - 1]['y'])} * -{n}) mod {p} = {result}")
+    else:
+        print(f"({int(shares[decrypt_secrets[i] - 1]['y'])} * {n}/{d}) mod {p} = {result}")
     sum += result
-    out += str(format_result(result))
-    if n != len(l) - 1:
+    out += str(int(result))
+    if i != len(l_denom) - 1:
         out += " + "
-out += f") mod {p} = {format_result(sympy.Mod(sum, p))}"
+out += f") mod {p} = {sum % p}"
 print(out)
