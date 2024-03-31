@@ -64,9 +64,28 @@ def chi(state):
             for y in range(5):
                 state[x][y][z] = temp_tabs[y][x] ^ (~temp_tabs[(y + 1) % 5][x] & temp_tabs[(y + 2) % 5][x])
 
+def rc(t):
+    if t % 255 == 0:
+        return 1
+    R = [0,0,0,0,0,0,0,1]
+    for i in range(1, t % 255 + 1):
+        R.append(0)
+        R[0] = R[0] ^ R[8]
+        R[4] = R[4] ^ R[8]
+        R[5] = R[5] ^ R[8]
+        R[6] = R[6] ^ R[8]
+        R = R[0:8]
+        del R[8:]
+    return R[0]
+
 def iota(state, i):
     w = len(state[0][0])
-    # TODO implement iota function
+    RC = [0] * w
+    for j in range(int(math.log2(w)) + 1):
+        RC[pow(2, j) - 1] = rc(j + 7*i)
+    temp = []
+    for z in range(w):
+        state[0][0][z] = state[0][0][z] ^ RC[z]
 
 b_tab = [25, 50, 100, 200, 400, 800, 1600]
 print("Choose b value ")
@@ -101,7 +120,7 @@ for i in range(permutations):
     rho(state, rho_const)
     pi(state, pi_const)
     chi(state)
-    #iota(state, i) 
+    iota(state, i) 
        
 print("State array after permutations")
 print()
