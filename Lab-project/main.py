@@ -1,13 +1,14 @@
 import math
 import random
+from termcolor import colored
 
-def print_state(state):
-    for z in range(len(state[0][0])):
+def print_matrix(matrix):
+    for z in range(len(matrix[0][0])):
         print(f"for z = {z}: ")
         for y in range(5):
             out = ""
             for x in range(5):
-                out += f"{state[x][y][z]} "
+                out += f"{matrix[x][y][z]} "
             print(out)
         print()
 
@@ -87,6 +88,36 @@ def iota(state, i):
     for z in range(w):
         state[0][0][z] = state[0][0][z] ^ RC[z]
 
+def hash(message):
+    rho_const = [3, 21, 11, 28, 0, 1, 6, 25, 8, 18, 14, 27, 24, 2, 4, 13, 7, 23, 20, 12, 9, 10, 15, 17, 19]
+    pi_const = [3, 2]
+    state = []
+    for x in range(5):
+        temp1 = []
+        for y in range(5):
+            temp2 = []
+            for z in range(w):
+                temp2.append(0)
+            temp1.append(temp2)
+        state.append(temp1)
+    permutations = 12 + (2 * l)
+    for i in range(permutations):
+        theta(state)
+        rho(state, rho_const)
+        pi(state, pi_const)
+        chi(state)
+        iota(state, i)
+    result = []
+    for x in range(5):
+        temp1 = []
+        for y in range(5):
+            temp2 = []
+            for z in range(w):
+                temp2.append(message[x][y][z] ^ state[x][y][z])
+            temp1.append(temp2)
+        result.append(temp1)
+    return result
+
 b_tab = [25, 50, 100, 200, 400, 800, 1600]
 print("Choose b value ")
 for i, b in enumerate(b_tab):
@@ -97,10 +128,7 @@ w = int(b/25)
 l = int(math.log2(w))
 print(f"b = {b} | w = {w} | l = {l}")
 
-rho_const = [3, 21, 11, 28, 0, 1, 6, 25, 8, 18, 14, 27, 24, 2, 4, 13, 7, 23, 20, 12, 9, 10, 15, 17, 19]
-pi_const = [3, 2]
-
-state = []
+message = []
 for x in range(5):
     temp1 = []
     for y in range(5):
@@ -108,20 +136,12 @@ for x in range(5):
         for z in range(w):
             temp2.append(random.randint(0,1))
         temp1.append(temp2)
-    state.append(temp1)
+    message.append(temp1)
 
-print("State array before permutations")
+print("Message: ")
 print()
-print_state(state)
+print_matrix(message)
 
-permutations = 12 + (2 * l)
-for i in range(permutations):
-    theta(state)
-    rho(state, rho_const)
-    pi(state, pi_const)
-    chi(state)
-    iota(state, i) 
-       
-print("State array after permutations")
+print("Hashed message: ")
 print()
-print_state(state)
+print_matrix(hash(message))
