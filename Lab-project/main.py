@@ -25,7 +25,8 @@ def theta(state):
             for y in range(5):
                 state[x][y][z] = state[x][y][z] ^ pairity[(x - 1) % 5] ^ pairity[(x + 1) % 5]
 
-def rho(state, rho_const):
+def rho(state):
+    rho_const = [153, 55, 28, 120, 21, 231, 276, 91, 78, 136, 3, 36, 0, 210, 105, 10, 300, 1, 66, 45, 171, 6, 190, 253, 15]
     w = len(state[0][0])
     temp_tabs = []
     for x in range(5):
@@ -39,7 +40,8 @@ def rho(state, rho_const):
             for z in range(w):
                 state[x][y][z] = temp_tabs[x*5 + y][(z + rho_const[x*5 + y]) % w]
 
-def pi(state, pi_const):
+def pi(state):
+    pi_const = [1, 3]
     w = len(state[0][0])
     for z in range(w):
         temp_tabs = []
@@ -89,8 +91,6 @@ def iota(state, i):
         state[0][0][z] = state[0][0][z] ^ RC[z]
 
 def hash(message):
-    rho_const = [3, 21, 11, 28, 0, 1, 6, 25, 8, 18, 14, 27, 24, 2, 4, 13, 7, 23, 20, 12, 9, 10, 15, 17, 19]
-    pi_const = [3, 2]
     state = []
     for x in range(5):
         temp1 = []
@@ -100,11 +100,11 @@ def hash(message):
                 temp2.append(0)
             temp1.append(temp2)
         state.append(temp1)
-    permutations = 12 + (2 * l)
+    permutations = 12 + (2 * int(math.log2(w)))
     for i in range(permutations):
         theta(state)
-        rho(state, rho_const)
-        pi(state, pi_const)
+        rho(state)
+        pi(state)
         chi(state)
         iota(state, i)
     result = []
@@ -117,6 +117,33 @@ def hash(message):
             temp1.append(temp2)
         result.append(temp1)
     return result
+
+def bitXYZ_sac(message, bit_x, bit_y, bit_z):
+    w = len(message[0][0])
+    hashed_message = hash(message)
+    changed_message = []
+    for x in range(5):
+        temp1 = []
+        for y in range(5):
+            temp2 = []
+            for z in range(w):
+                if z == bit_z and y == bit_y and x == bit_x:
+                    temp2.append(message[x][y][z] ^ 1)
+                else:
+                    temp2.append(message[x][y][z])
+            temp1.append(temp2)
+        changed_message.append(temp1)
+    hashed_changed_message = hash(changed_message)
+    print_matrix(message)
+    print_matrix(hashed_message)
+    print_matrix(changed_message)
+    print_matrix(hashed_changed_message)
+    bit_changed = 0
+    for x in range(5):
+        for y in range(5):
+            for z in range(w):
+                bit_changed += (hashed_message[x][y][z] ^ hashed_changed_message[x][y][z])
+    return bit_changed
 
 b_tab = [25, 50, 100, 200, 400, 800, 1600]
 print("Choose b value ")
@@ -138,10 +165,12 @@ for x in range(5):
         temp1.append(temp2)
     message.append(temp1)
 
-print("Message: ")
-print()
+print("\nMessage: \n")
 print_matrix(message)
 
-print("Hashed message: ")
-print()
-print_matrix(hash(message))
+hashed_message = hash(message)
+
+print("Hashed message: \n")
+print_matrix(hashed_message)
+
+print(bitXYZ_sac(message, 0, 0, 0))
