@@ -1,6 +1,7 @@
 import math
 import random
 from termcolor import colored
+from itertools import product
 
 def print_matrix(matrix):
     for z in range(len(matrix[0][0])):
@@ -90,7 +91,25 @@ def iota(state, i):
     for z in range(w):
         state[0][0][z] = state[0][0][z] ^ RC[z]
 
-def hash(message):
+def f(state, i):
+    theta(state)
+    rho(state)
+    pi(state)
+    chi(state)
+    iota(state, i)
+    return state
+
+def add_padding(message, r):
+    padding_length = r - (len(message) % r)
+    print(padding_length)
+    for i in range(padding_length):
+        if i == 0 or i == (padding_length - 1):
+            message.append(1)
+        else:
+            message.append(0)
+    return message
+
+def hash(message, w, r):
     state = []
     for x in range(5):
         temp1 = []
@@ -100,23 +119,19 @@ def hash(message):
                 temp2.append(0)
             temp1.append(temp2)
         state.append(temp1)
-    permutations = 12 + (2 * int(math.log2(w)))
+    message = add_padding(message, r)
+    bits_xored = 0
+    permutations = int(len(message) / r)
     for i in range(permutations):
-        theta(state)
-        rho(state)
-        pi(state)
-        chi(state)
-        iota(state, i)
-    result = []
-    for x in range(5):
-        temp1 = []
-        for y in range(5):
-            temp2 = []
-            for z in range(w):
-                temp2.append(message[x][y][z] ^ state[x][y][z])
-            temp1.append(temp2)
-        result.append(temp1)
-    return result
+        for x, y, z in product(range(5), range(5), range(w)):
+            state[x][y][z] = state[x][y][z] ^ message[bits_xored]
+            bits_xored += 1
+            if bits_xored % r == 0:
+                break
+        state = f(state, i)
+    Z = []
+    l = int(math.log2(w))
+    # I co dalej?
 
 def bitXYZ_sac(message, bit_x, bit_y, bit_z):
     w = len(message[0][0])
@@ -154,6 +169,15 @@ b = b_tab[choice - 1]
 w = int(b/25)
 l = int(math.log2(w))
 print(f"b = {b} | w = {w} | l = {l}")
+
+message = input("Input message to hash: ")
+r = int(input("Input block size r:"))
+message_bits = []
+for char in message:
+    for bit in bin(ord(char))[2:].zfill(8):
+        message_bits.append(int(bit))
+
+hash(message_bits, w, r)
 
 message = []
 for x in range(5):
