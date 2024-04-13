@@ -1,7 +1,5 @@
 import math
-import random
-from termcolor import colored
-from itertools import product
+from itertools import *
 
 def print_matrix(matrix):
     for z in range(len(matrix[0][0])):
@@ -91,17 +89,18 @@ def iota(state, i):
     for z in range(w):
         state[0][0][z] = state[0][0][z] ^ RC[z]
 
-def f(state, i):
-    theta(state)
-    rho(state)
-    pi(state)
-    chi(state)
-    iota(state, i)
+def f(state, l):
+    perm = 12 + 2*l
+    for i in range(perm):
+        theta(state)
+        rho(state)
+        pi(state)
+        chi(state)
+        iota(state, i)
     return state
 
 def add_padding(message, r):
     padding_length = r - (len(message) % r)
-    print(padding_length)
     for i in range(padding_length):
         if i == 0 or i == (padding_length - 1):
             message.append(1)
@@ -109,7 +108,7 @@ def add_padding(message, r):
             message.append(0)
     return message
 
-def hash(message, w, r):
+def hash(message, w, r, hash_len = 256):
     state = []
     for x in range(5):
         temp1 = []
@@ -122,43 +121,47 @@ def hash(message, w, r):
     message = add_padding(message, r)
     bits_xored = 0
     permutations = int(len(message) / r)
+    l = int(math.log2(w))
     for i in range(permutations):
         for x, y, z in product(range(5), range(5), range(w)):
             state[x][y][z] = state[x][y][z] ^ message[bits_xored]
             bits_xored += 1
             if bits_xored % r == 0:
                 break
-        state = f(state, i)
+        state = f(state, l)
     Z = []
-    l = int(math.log2(w))
-    # I co dalej?
+    counter = 0
+    for x, y, z in product(range(5), range(5), range(w)):
+        Z.append(state[x][y][z])
+        counter += 1
+        if counter > r:
+            break
+    while len(Z) < hash_len:
+        state = f(state, l)
+        counter = 0
+        for x, y, z in product(range(5), range(5), range(w)):
+            Z.append(state[x][y][z])
+            counter += 1
+            if counter > r:
+                break
+    return Z[:hash_len]
 
-def bitXYZ_sac(message, bit_x, bit_y, bit_z):
-    w = len(message[0][0])
-    hashed_message = hash(message)
-    changed_message = []
-    for x in range(5):
-        temp1 = []
-        for y in range(5):
-            temp2 = []
-            for z in range(w):
-                if z == bit_z and y == bit_y and x == bit_x:
-                    temp2.append(message[x][y][z] ^ 1)
-                else:
-                    temp2.append(message[x][y][z])
-            temp1.append(temp2)
-        changed_message.append(temp1)
-    hashed_changed_message = hash(changed_message)
-    print_matrix(message)
-    print_matrix(hashed_message)
-    print_matrix(changed_message)
-    print_matrix(hashed_changed_message)
-    bit_changed = 0
-    for x in range(5):
-        for y in range(5):
-            for z in range(w):
-                bit_changed += (hashed_message[x][y][z] ^ hashed_changed_message[x][y][z])
-    return bit_changed
+def sac(message_bits, w, r, hash_len=256):
+    hashed = hash(message_bits, w, r)
+    sac_sum = 0
+    for i in range(len(message_bits)):
+        comp_tab = []
+        for j, bit in enumerate(message_bits):
+            if i != j:
+                comp_tab.append(bit)
+            else:
+                comp_tab.append(bit^1)
+        comp_hash = hash(comp_tab, w, r)
+        xor = 0
+        for j in range(len(hashed)):
+            xor += hashed[j] ^ comp_hash[j]
+        sac_sum += (float)(xor/len(hashed))
+    return (float)(sac_sum / len(message_bits))
 
 b_tab = [25, 50, 100, 200, 400, 800, 1600]
 print("Choose b value ")
@@ -177,24 +180,12 @@ for char in message:
     for bit in bin(ord(char))[2:].zfill(8):
         message_bits.append(int(bit))
 
-hash(message_bits, w, r)
+hashed = hash(message_bits, w, r)
+hash_bytes = [sum([byte[b] << b for b in range(0,8)])
+            for byte in zip(*(iter(hashed),) * 8)
+        ]
+hash_hex = ''.join('{:02x}'.format(x) for x in hash_bytes)
 
-message = []
-for x in range(5):
-    temp1 = []
-    for y in range(5):
-        temp2 = []
-        for z in range(w):
-            temp2.append(random.randint(0,1))
-        temp1.append(temp2)
-    message.append(temp1)
-
-print("\nMessage: \n")
-print_matrix(message)
-
-hashed_message = hash(message)
-
-print("Hashed message: \n")
-print_matrix(hashed_message)
-
-print(bitXYZ_sac(message, 0, 0, 0))
+print(f"\nMessage: {message}" )
+print(f"\nHashed message: {hash_hex}")
+print(f"\nSAC: {sac(message_bits, w, r)}")
