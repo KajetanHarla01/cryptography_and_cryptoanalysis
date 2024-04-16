@@ -1,4 +1,5 @@
 import math
+import random
 from itertools import *
 
 def print_matrix(matrix):
@@ -163,6 +164,21 @@ def sac(message_bits, w, r, hash_len=256):
         sac_sum += (float)(xor/len(hashed))
     return (float)(sac_sum / len(message_bits))
 
+def test_collision_resistance(w, r):
+    hash_outputs = {}
+    collision_found = False
+    while not collision_found:
+        message = [random.randint(0, 1) for _ in range(200)]  # Generate a random message
+        hashed_message = hash(message, w, r)
+        hashed_message_str = ''.join(str(bit) for bit in hashed_message)
+        if hashed_message_str in hash_outputs:  # Check if the hash output already exists
+            print("\nCollision found:")
+            print("Message 1:", hash_outputs[hashed_message_str])
+            print("Message 2:", message)
+            collision_found = True
+        else:
+            hash_outputs[hashed_message_str] = message
+
 b_tab = [25, 50, 100, 200, 400, 800, 1600]
 print("Choose b value ")
 for i, b in enumerate(b_tab):
@@ -188,4 +204,6 @@ hash_hex = ''.join('{:02x}'.format(x) for x in hash_bytes)
 
 print(f"\nMessage: {message}" )
 print(f"\nHashed message: {hash_hex}")
-print(f"\nSAC: {sac(message_bits, w, r)}")
+
+#print(f"\nSAC: {sac(message_bits, w, r)}")
+#test_collision_resistance(w, r)
